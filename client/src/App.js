@@ -28,7 +28,8 @@ class App extends Component {
         console.log(message);
         this.setState({ text: JSON.parse(data.content) });
       } else if (data.type === "createMessage") {
-        let newChats = this.state.text.push(JSON.parse(data.content));
+        let newChats = this.state.text;
+        newChats.push(data.content);
         this.setState({ text: newChats });
       }
     };

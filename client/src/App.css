@@ -3,5 +3,11 @@
 }
 
 .column {
-  flex: 50%;
+  width: 50%;
+}
+
+.chat-line {
+  word-wrap: break-word;
+  margin-top: 5px;
+
 }

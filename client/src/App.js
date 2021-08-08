@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { w3cwebsocket as W3CWebSocket } from "websocket";
 import ChatBox from "./ChatBox";
-import './App.css';
+import "./App.css";
 
 const client = new W3CWebSocket("ws://127.0.0.1:8081");
 
@@ -9,28 +9,28 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      text: ["Hello"],
+      chatEvents: [],
       inputText: "",
     };
   }
 
   componentWillMount() {
     client.onopen = () => {
-      console.log("WebSocket Client Connected");
       client.send(
-        JSON.stringify({ type: "createMessage", content: "I came from js!" })
+        JSON.stringify({
+          type: "startConnection",
+          content: "React Lite Client",
+        })
       );
     };
     client.onmessage = (message) => {
       let data = JSON.parse(message.data);
       if (data.type === "viewMessages") {
-        console.log("All messages received");
-        console.log(message);
-        this.setState({ text: JSON.parse(data.content) });
+        this.setState({ chatEvents: JSON.parse(data.content) });
       } else if (data.type === "createMessage") {
-        let newChats = this.state.text;
+        let newChats = this.state.chatEvents;
         newChats.push(data.content);
-        this.setState({ text: newChats });
+        this.setState({ chatEvents: newChats });
       }
     };
     this.handleTextChange = this.handleTextChange.bind(this);
@@ -39,7 +39,10 @@ class App extends Component {
   handleTextChange(e) {
     if (e.keyCode === 13) {
       client.send(
-        JSON.stringify({ type: "createMessage", content: e.target.value })
+        JSON.stringify({
+          type: "createMessage",
+          content: { text: e.target.value },
+        })
       );
       this.setState({ inputText: "" });
     } else {
@@ -51,13 +54,13 @@ class App extends Component {
     return (
       <div class="row">
         <div class="column">
-          <NumberList numbers={this.state.text} />
+          <NumberList chatEvents={this.state.chatEvents} />
         </div>
         <div class="column">
-        <ChatBox
-          text={this.state.inputText}
-          handleTextChange={this.handleTextChange}
-        />
+          <ChatBox
+            text={this.state.inputText}
+            handleTextChange={this.handleTextChange}
+          />
         </div>
       </div>
     );
@@ -65,12 +68,26 @@ class App extends Component {
 }
 
 function NumberList(props) {
-  const numbers = props.numbers;
-  console.log(numbers);
-  const listItems = numbers.map((number) => (
-    <li key={number.toString()}>{number}</li>
-  ));
-  return <ul>{listItems}</ul>;
+  const chatEvents = props.chatEvents;
+  if (chatEvents.length) {
+    const listItems = chatEvents.map((chatEvent) => (
+      <div class="chat-line">
+        {new Intl.DateTimeFormat("en-GB", {
+          month: "short",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        }).format(Date.parse(chatEvent.date))}
+        {" - "}
+        {chatEvent.text}
+      </div>
+    ));
+
+    return <div>{listItems}</div>;
+  } else {
+    return <div>No messages yet</div>;
+  }
 }
 
 export default App;
